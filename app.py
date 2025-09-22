@@ -136,4 +136,4 @@ with st.sidebar:
 
 # Footer (optional: add your contact for farmers)
 st.markdown("---")
-st.markdown("*Built for Ludhiana farmers. Questions? Contact [your-email@example.com](mailto:your-email@example.com). 🌾*")
+st.markdown("*Built for Ludhiana farmers. Questions? Contact [prabuddhsharma2020@gmail.com](mailto:prabuddhsharma@gmail.com). 🌾*")  # Replace with your real email!
