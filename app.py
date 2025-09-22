@@ -94,7 +94,7 @@ if prompt := st.chat_input("Type your message here..."):
             for day in forecast_data:
                 line = f"- **{day['date']}** {day['emoji']}: Max {day['max_temp']}C / Min {day['min_temp']}C | Avg {day['avg_temp']:.1f}C | {day['condition']}"
                 forecast_lines.append(line)
-            forecast_lines.append("\nWhich crop are you growing? (e.g., wheat, rice, maize) I can suggest suitable pesticides based on the weather trends.")
+            forecast_lines.append("\nWhich crop are you growing? (wheat, rice, maize, cotton, sugarcane) I can suggest suitable pesticides based on the weather trends.")
             
             # Join with \n for markdown rendering
             forecast_msg = "\n".join(forecast_lines)
