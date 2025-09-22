@@ -1,6 +1,5 @@
 import streamlit as st
 import requests
-import json
 from datetime import datetime, timedelta
 
 # Load API key from Streamlit Secrets (secure - set this in Streamlit Cloud dashboard)
@@ -48,12 +47,15 @@ def get_10day_forecast():
                 min_temp = day_data["day"]["mintemp_c"]
                 avg_temp = day_data["day"]["avgtemp_c"]
                 condition = day_data["day"]["condition"]["text"]
+                # Simple emoji based on condition (optional polish)
+                weather_emoji = "☀️" if "sunny" in condition.lower() else "🌤️" if "cloudy" in condition.lower() else "🌧️" if "rain" in condition.lower() else "⛅"
                 forecast_list.append({
                     "date": date,
                     "max_temp": max_temp,
                     "min_temp": min_temp,
                     "avg_temp": avg_temp,
-                    "condition": condition
+                    "condition": condition,
+                    "emoji": weather_emoji
                 })
             return forecast_list
         else:
@@ -87,14 +89,19 @@ if prompt := st.chat_input("Type your message here..."):
         # Greet and fetch 10-day forecast
         forecast_data = get_10day_forecast()
         if forecast_data:
-            forecast_msg = "**10-Day Weather Forecast for Ludhiana (starting today):\\n\\n"
+            # Build forecast as a list of markdown lines for clean display
+            forecast_lines = ["**10-Day Weather Forecast for Ludhiana (starting today):**"]
             for day in forecast_data:
-                forecast_msg += f"- **{day['date']}**: Max {day['max_temp']}C / Min {day['min_temp']}C | Avg {day['avg_temp']:.1f}C | {day['condition']}\\n"
-            forecast_msg += "\\nWhich crop are you growing? (e.g., wheat, rice, maize) I can suggest suitable pesticides based on the weather trends."
+                line = f"- **{day['date']}** {day['emoji']}: Max {day['max_temp']}C / Min {day['min_temp']}C | Avg {day['avg_temp']:.1f}C | {day['condition']}"
+                forecast_lines.append(line)
+            forecast_lines.append("\nWhich crop are you growing? (e.g., wheat, rice, maize) I can suggest suitable pesticides based on the weather trends.")
+            
+            # Join with \n for markdown rendering
+            forecast_msg = "\n".join(forecast_lines)
             st.session_state.messages.append({"role": "assistant", "content": forecast_msg})
             st.session_state.step = 1
         else:
-            error_msg = "Sorry, I couldn\\'t fetch the 10-day forecast right now. Please try again later.\\n\\nWhich crop are you growing?"
+            error_msg = "Sorry, I couldn't fetch the 10-day forecast right now. Please try again later.\n\nWhich crop are you growing?"
             st.session_state.messages.append({"role": "assistant", "content": error_msg})
             st.session_state.step = 1
 
@@ -102,7 +109,7 @@ if prompt := st.chat_input("Type your message here..."):
         # User provides crop
         st.session_state.crop = prompt
         pesticide = get_pesticide_suggestion(st.session_state.crop)
-        pesticide_msg = f"**Suggested Pesticide for {st.session_state.crop} (considering upcoming weather):**\\n{pesticide}\\n\\n*Note: Weather forecast suggests planning applications during milder conditions. Always follow local guidelines and safety instructions.*\\n\\nThank you for using the chatbot! If you need more help, refresh the page."
+        pesticide_msg = f"**Suggested Pesticide for {st.session_state.crop} (considering upcoming weather):**\n{pesticide}\n\n*Note: Weather forecast suggests planning applications during milder conditions. Always follow local guidelines and safety instructions.*\n\nThank you for using the chatbot! If you need more help, refresh the page."
         st.session_state.messages.append({"role": "assistant", "content": pesticide_msg})
         st.session_state.step = 2
 
@@ -116,7 +123,7 @@ if prompt := st.chat_input("Type your message here..."):
 
 # Initial greeting if no messages
 if not st.session_state.messages:
-    greeting = "Hello! 👋 I\\'m your AI assistant for farmers in Ludhiana, Punjab. I provide 10-day weather forecasts and suggest pesticides based on your crop.\\n\\nType anything to get started (e.g., \\'Hi\\' or \\'Start\\')."
+    greeting = "Hello! 👋 I'm your AI assistant for farmers in Ludhiana, Punjab. I provide 10-day weather forecasts and suggest pesticides based on your crop.\n\nType anything to get started (e.g., 'Hi' or 'Start')."
     st.session_state.messages.append({"role": "assistant", "content": greeting})
     st.rerun()
 
