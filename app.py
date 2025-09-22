@@ -17,9 +17,9 @@ pesticide_suggestions = {
 }
 
 # Streamlit App
-st.set_page_config(page_title="10-Day Weather & Pesticide Chatbot", page_icon="???", layout="centered")
+st.set_page_config(page_title="10-Day Weather & Pesticide Chatbot", page_icon="🌤️", layout="centered")
 
-st.title("??? 10-Day Weather Forecast & Pesticide Chatbot for Ludhiana Farmers")
+st.title("🌤️ 10-Day Weather Forecast & Pesticide Chatbot for Ludhiana Farmers")
 st.markdown("---")
 
 # Initialize session state for chat history and conversation flow
@@ -89,7 +89,7 @@ if prompt := st.chat_input("Type your message here..."):
         if forecast_data:
             forecast_msg = "**10-Day Weather Forecast for Ludhiana (starting today):\\n\\n"
             for day in forecast_data:
-                forecast_msg += f"- **{day['date']}**: Max {day['max_temp']}�C / Min {day['min_temp']}�C | Avg {day['avg_temp']:.1f}�C | {day['condition']}\\n"
+                forecast_msg += f"- **{day['date']}**: Max {day['max_temp']}C / Min {day['min_temp']}C | Avg {day['avg_temp']:.1f}C | {day['condition']}\\n"
             forecast_msg += "\\nWhich crop are you growing? (e.g., wheat, rice, maize) I can suggest suitable pesticides based on the weather trends."
             st.session_state.messages.append({"role": "assistant", "content": forecast_msg})
             st.session_state.step = 1
@@ -116,7 +116,7 @@ if prompt := st.chat_input("Type your message here..."):
 
 # Initial greeting if no messages
 if not st.session_state.messages:
-    greeting = "Hello! ?? I\\'m your AI assistant for farmers in Ludhiana, Punjab. I provide 10-day weather forecasts and suggest pesticides based on your crop.\\n\\nType anything to get started (e.g., \\'Hi\\' or \\'Start\\')."
+    greeting = "Hello! 👋 I\\'m your AI assistant for farmers in Ludhiana, Punjab. I provide 10-day weather forecasts and suggest pesticides based on your crop.\\n\\nType anything to get started (e.g., \\'Hi\\' or \\'Start\\')."
     st.session_state.messages.append({"role": "assistant", "content": greeting})
     st.rerun()
 
@@ -129,4 +129,4 @@ with st.sidebar:
 
 # Footer (optional: add your contact for farmers)
 st.markdown("---")
-st.markdown("*Built for Ludhiana farmers. Questions? Contact [your-email@example.com](mailto:your-email@example.com). ??*")	
+st.markdown("*Built for Ludhiana farmers. Questions? Contact [your-email@example.com](mailto:your-email@example.com). 🌾*")
