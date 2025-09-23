@@ -64,7 +64,7 @@ st.markdown("---")
 
 # Initialize session state for steps (no chat input - button-based)
 if "step" not in st.session_state:
-    st.session_state.step = 0  # 0: State, 1: District, 2: Weather, 3: Crop, 4: Pesticide, 5: Prices, 6: Profit
+    st.session_state.step = 0  # 0: State, 1: District, 2: Weather, 3: Crop Select, 4: Pesticide, 5: Prices, 6: Profit
 if "selected_state" not in st.session_state:
     st.session_state.selected_state = ""
 if "selected_district" not in st.session_state:
@@ -120,7 +120,7 @@ def get_pesticide_suggestion(crop):
 # Function to display crop prices (National table with real data)
 def get_crop_prices_display(user_crop):
     if not crop_prices:
-        return "मूल्य डेटा अभी उपलब्ध नहीं। agmarknet.nic.in पर नवीनतम जांचें।"
+        return "मूल्य डेटा अभी उपलब्ध नहीं। agmarknet.nic.in पर नवीनतम जांचें।", 0
     
     table_lines = ["**भारत के वर्तमान मंडी मूल्य (₹ प्रति क्विंटल) - अपडेट: " + datetime.now().strftime("%Y-%m-%d") + "**",
                    "| फसल | मोडल मूल्य | न्यून-अधिकतम | अनुमानित आय/एकड़ (₹) |",
@@ -166,13 +166,16 @@ elif st.session_state.step == 1:
     st.header(f"📍 {st.session_state.selected_state} में अपना जिला चुनें")
     districts = states_districts.get(st.session_state.selected_state, [])
     selected_district = st.selectbox("जिला:", districts)
-    if st.button("जिला चुनें 👆", key="select_district"):
-        st.session_state.selected_district = selected_district
-        st.session_state.step = 2
-        st.rerun()
-    if st.button("वापस राज्य चुनें ⬅️", key="back_state"):
-        st.session_state.step = 0
-        st.rerun()
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("जिला चुनें 👆", key="select_district"):
+            st.session_state.selected_district = selected_district
+            st.session_state.step = 2
+            st.rerun()
+    with col2:
+        if st.button("वापस राज्य चुनें ⬅️", key="back_state"):
+            st.session_state.step = 0
+            st.rerun()
 
 elif st.session_state.step == 2:
     st.header(f"🌤️ {st.session_state.selected_district} के लिए 10-दिन मौसम पूर्वानुमान")
@@ -191,21 +194,4 @@ elif st.session_state.step == 2:
             if st.button("चावल 🌾", key="crop_rice"):
                 st.session_state.selected_crop = "rice"
                 st.session_state.step = 3
-                st.rerun()
-        with col3:
-            if st.button("मक्का 🌽", key="crop_maize"):
-                st.session_state.selected_crop = "maize"
-                st.session_state.step = 3
-                st.rerun()
-        with col4:
-            if st.button("कपास 🧵", key="crop_cotton"):
-                st.session_state.selected_crop = "cotton"
-                st.session_state.step = 3
-                st.rerun()
-        with col5:
-            if st.button("गन्ना 🪴", key="crop_sugarcane"):
-                st.session_state.selected_crop = "sugarcane"
-                st.session_state.step = 3
-                st.rerun()
-    else:
-        st.error("मौसम डेटा लाने में त्रुटि। API कुंजी सेट करें या पुनः प्रय
+                st
