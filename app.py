@@ -73,6 +73,8 @@ if "selected_crop" not in st.session_state:
     st.session_state.selected_crop = ""
 if "total_cost" not in st.session_state:
     st.session_state.total_cost = 0  # For profit calc
+if "revenue_estimate" not in st.session_state:
+    st.session_state.revenue_estimate = 0
 
 # Function to fetch 10-day forecast for selected district
 @st.cache_data(ttl=1800)  # Cache for 30 minutes
@@ -146,9 +148,10 @@ def get_crop_prices_display(user_crop):
 def calculate_profit(revenue, total_cost, crop):
     if total_cost > 0:
         profit = revenue - total_cost
-        return f"**{crop} के लिए लाभ कैलकुलेशन:**\n- अनुमानित आय: ₹{revenue:,}/एकड़\n- कुल लागत (आपकी इनपुट): ₹{total_cost:,}/एकड़\n- **शुद्ध लाभ: ₹{profit:,}/एकड़** (लागत घटाकर)\n\n*टिप: सामान्य लागत - गेहूं: ₹15,000-20,000/एकड़ (बीज, खाद, श्रम); अपनी वास्तविक लागत डालें।*"
+        profit_emoji = "💰" if profit > 0 else "⚠️" if profit == 0 else "📉"
+        return f"{profit_emoji} **{crop} के लिए लाभ कैलकुलेशन:**\n- अनुमानित आय: ₹{revenue:,}/एकड़\n- कुल लागत (आपकी इनपुट): ₹{total_cost:,}/एकड़\n- **शुद्ध लाभ: ₹{profit:,}/एकड़** (लागत घटाकर)\n\n*टिप: सामान्य लागत - गेहूं: ₹15,000-20,000/एकड़ (बीज, खाद, श्रम); अपनी वास्तविक लागत डालें।*"
     else:
-        return f"**{crop} के लिए आय:** ₹{revenue:,}/एकड़। लागत डालकर लाभ देखें!\n\n*टिप: कुल लागत (बीज + श्रम + खाद आदि) डालें।*"
+        return f"**{crop} के लिए आय:** ₹{revenue:,}/एकड़। लागत डालकर लाभ देखें!\n\n*टिप: कुल लागत (बीज + श्रम + खाद आदि) डालें (₹ में)।*"
 
 # Main App Logic (Button-based steps)
 if st.session_state.step == 0:
@@ -166,6 +169,9 @@ elif st.session_state.step == 1:
     if st.button("जिला चुनें 👆", key="select_district"):
         st.session_state.selected_district = selected_district
         st.session_state.step = 2
+        st.rerun()
+    if st.button("वापस राज्य चुनें ⬅️", key="back_state"):
+        st.session_state.step = 0
         st.rerun()
 
 elif st.session_state.step == 2:
@@ -202,19 +208,4 @@ elif st.session_state.step == 2:
                 st.session_state.step = 3
                 st.rerun()
     else:
-        st.error("मौसम डेटा लाने में त्रुटि। पुनः प्रयास करें।")
-        if st.button("वापस जिला चुनें ⬅️", key="back_district"):
-            st.session_state.step = 1
-            st.rerun()
-
-elif st.session_state.step == 3:
-    st.header(f"🌾 {st.session_state.selected_crop} के लिए कीटनाशक सुझाव (मौसम को ध्यान में रखते हुए)")
-    pesticide = get_pesticide_suggestion(st.session_state.selected_crop)
-    st.markdown(f"**सुझाया कीटनाशक:**\n{pesticide}")
-    st.markdown("*नोट: मौसम के आधार पर हल्के दिनों में उपयोग करें। स्थानीय सलाह लें।*")
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("मूल्य अपडेट देखें 💰", key="show_prices"):
-            st.session_state.step = 4
-            st.rerun()
-    with col
+        st.error("मौसम डेटा लाने में त्रुटि। API कुंजी सेट करें या पुनः प्रय
