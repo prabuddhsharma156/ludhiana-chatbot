@@ -3,7 +3,7 @@ import requests
 from datetime import datetime, timedelta
 
 # Load API key from Streamlit Secrets (secure - set this in Streamlit Cloud dashboard)
-WEATHER_API_KEY = st.secrets.get("WEATHER_API_KEY", "YOUR_WEATHERAPI_KEY_HERE")  # Fallback for local testing
+WEATHER_API_KEY = st.secrets.get("WEATHER_API_KEY", "a471efb91f4c4e29ac9135831252209")  # Fallback for local testing
 
 # Crop to pesticide mapping (Hindi descriptions)
 pesticide_suggestions = {
@@ -37,7 +37,7 @@ crop_prices = {
 # Streamlit App (Hindi title and config)
 st.set_page_config(page_title="10-दिन मौसम और फसल सलाह चैटबॉट", page_icon="🌤️", layout="centered")
 
-st.title("🌤️ लुधियाना किसानों के लिए 10-दिन मौसम पूर्वानुमान और फसल सलाह चैटबॉट")
+st.title("🌤️ किसानों के लिए 10-दिन मौसम पूर्वानुमान और फसल सलाह चैटबॉट")
 st.markdown("---")
 
 # Initialize session state for steps (no chat input - button-based)
@@ -213,4 +213,5 @@ with st.sidebar:
 
 # Footer (Hindi, with your email)
 st.markdown("---")
-st.markdown("*लुधियाना किसानों के लिए बनाया गया। प्रश्न? संपर्क [yourname@gmail.com](mailto:yourname@gmail.com). 🌾*")  # अपना ईमेल यहां डालें!
+st.markdown("*लुधियाना किसानों के लिए बनाया गया। प्रश्न? संपर्क [prabuddhsharma2020@gmail.com](mailto:prabuddhsharma2020@gmail.com). 🌾*")  # अपना ईमेल यहां डालें!
+
