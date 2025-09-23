@@ -1,9 +1,9 @@
 import streamlit as st
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime
 
-# Load API key from Streamlit Secrets (secure - set this in Streamlit Cloud dashboard)
-WEATHER_API_KEY = st.secrets.get("WEATHER_API_KEY", "a471efb91f4c4e29ac9135831252209")  # Fallback for local testing
+# Load API key from Streamlit Secrets (MUST SET REAL KEY for weather to work)
+WEATHER_API_KEY = st.secrets.get("WEATHER_API_KEY", "YOUR_WEATHERAPI_KEY_HERE")
 
 # Crop to pesticide mapping (Hindi descriptions)
 pesticide_suggestions = {
@@ -14,7 +14,7 @@ pesticide_suggestions = {
     "sugarcane": "कीटनाशक JKL (उदाहरण: क्लोरपायरीफॉस) - बोरर और दीमक से लड़ाई।",
 }
 
-# All 28 Indian States with 4-5 major districts each (Hindi names, agri-focused where possible)
+# All 28 Indian States with 4-5 major districts (Hindi for UI)
 states_districts = {
     "आंध्र प्रदेश": ["विशाखापत्तनम", "विजयवाड़ा", "गुंटूर", "कुरनूल", "अनंतपुर"],
     "अरुणाचल प्रदेश": ["इटानगर", "तवांग", "पापुम पारे", "लोहित"],
@@ -46,8 +46,90 @@ states_districts = {
     "पश्चिम बंगाल": ["कोलकाता", "हावड़ा", "दरजीलिंग", "बर्धमान", "मालदा"],
 }
 
-# Real crop prices: National India-wide averages (Oct 2024 data from Agmarknet/CommodityOnline - static for stability)
-# Sources: Recent mandi averages (e.g., Wheat ₹2450 from Ludhiana/Delhi; works tomorrow without updates)
+# Hindi District to English City Mapping (for Weather API - fixes wrong weather)
+district_english_map = {
+    # Punjab
+    "लुधियाना": "Ludhiana",
+    "अमृतसर": "Amritsar",
+    "जालंधर": "Jalandhar",
+    "पटियाला": "Patiala",
+    "बठिंडा": "Bathinda",
+    # Haryana
+    "करनाल": "Karnal",
+    "अंबाला": "Ambala",
+    "कुरुक्षेत्र": "Kurukshetra",
+    "सिरसा": "Sirsa",
+    "फरीदाबाद": "Faridabad",
+    # Uttar Pradesh
+    "लखनऊ": "Lucknow",
+    "कानपुर": "Kanpur",
+    "आगरा": "Agra",
+    "वाराणसी": "Varanasi",
+    "मेरठ": "Meerut",
+    # Maharashtra
+    "मुंबई": "Mumbai",
+    "पुणे": "Pune",
+    "नागपुर": "Nagpur",
+    "नासिक": "Nashik",
+    "अमरावती": "Amravati",
+    # Rajasthan
+    "जयपुर": "Jaipur",
+    "जोधपुर": "Jodhpur",
+    "उदयपुर": "Udaipur",
+    "कोटा": "Kota",
+    "बीकानेर": "Bikaner",
+    # Madhya Pradesh
+    "भोपाल": "Bhopal",
+    "इंदौर": "Indore",
+    "ग्वालियर": "Gwalior",
+    "जबलपुर": "Jabalpur",
+    "उज्जैन": "Ujjain",
+    # Gujarat
+    "अहमदाबाद": "Ahmedabad",
+    "सूरत": "Surat",
+    "वडोदरा": "Vadodara",
+    "राजकोट": "Rajkot",
+    "भावनगर": "Bhavnagar",
+    # Bihar
+    "पटना": "Patna",
+    "गया": "Gaya",
+    "भागलपुर": "Bhagalpur",
+    "मुजफ्फरपुर": "Muzaffarpur",
+    "पूर्णिया": "Purnia",
+    # Andhra Pradesh
+    "विशाखापत्तनम": "Visakhapatnam",
+    "विजयवाड़ा": "Vijayawada",
+    "गुंटूर": "Guntur",
+    "कुरनूल": "Kurnool",
+    "अनंतपुर": "Anantapur",
+    # Karnataka
+    "बेंगलुरु": "Bengaluru",
+    "मैसूर": "Mysore",
+    "हुबली": "Hubli",
+    "बेलगाम": "Belgaum",
+    "मंगलुरु": "Mangalore",
+    # Tamil Nadu
+    "चेन्नई": "Chennai",
+    "कोयंबटूर": "Coimbatore",
+    "मदुरै": "Madurai",
+    "तिरुचिरापल्ली": "Tiruchirappalli",
+    "सलेम": "Salem",
+    # Telangana
+    "हैदराबाद": "Hyderabad",
+    "वरंगल": "Warangal",
+    "निजामाबाद": "Nizamabad",
+    "खम्मम": "Khammam",
+    "महबूबनगर": "Mahbubnagar",
+    # Add more as needed for other states (e.g., "कोलकाता": "Kolkata")
+    "कोलकाता": "Kolkata",
+    "देहरादून": "Dehradun",
+    "शिमला": "Shimla",
+    "रांची": "Ranchi",
+    "भुवनेश्वर": "Bhubaneswar",
+    # ... (extend for all if needed; fallback to Hindi if not mapped)
+}
+
+# Real crop prices (Oct 2024 national averages - static)
 crop_prices = {
     "wheat": {"modal_price": 2450, "min_price": 2400, "max_price": 2500, "avg_yield_quintal_per_acre": 20},
     "rice": {"modal_price": 2150, "min_price": 2100, "max_price": 2200, "avg_yield_quintal_per_acre": 25},
@@ -56,15 +138,13 @@ crop_prices = {
     "sugarcane": {"modal_price": 360, "min_price": 350, "max_price": 370, "avg_yield_quintal_per_acre": 400},
 }
 
-# Streamlit App (Hindi title and config)
-st.set_page_config(page_title="10-दिन मौसम और फसल सलाह चैटबॉट", page_icon="🌤️", layout="centered")
-
-st.title("🌤️ भारतीय किसानों के लिए 10-दिन मौसम, फसल सलाह और लाभ कैलकुलेटर")
+st.set_page_config(page_title="फसल सलाह चैटबॉट", page_icon="🌤️", layout="centered")
+st.title("🌤️ भारतीय किसानों के लिए मौसम, सलाह और लाभ कैलकुलेटर")
 st.markdown("---")
 
-# Initialize session state for steps (no chat input - button-based)
+# Session state
 if "step" not in st.session_state:
-    st.session_state.step = 0  # 0: State, 1: District, 2: Weather, 3: Crop Select, 4: Pesticide, 5: Prices, 6: Profit
+    st.session_state.step = 0
 if "selected_state" not in st.session_state:
     st.session_state.selected_state = ""
 if "selected_district" not in st.session_state:
@@ -72,19 +152,22 @@ if "selected_district" not in st.session_state:
 if "selected_crop" not in st.session_state:
     st.session_state.selected_crop = ""
 if "total_cost" not in st.session_state:
-    st.session_state.total_cost = 0  # For profit calc
+    st.session_state.total_cost = 0
 if "revenue_estimate" not in st.session_state:
     st.session_state.revenue_estimate = 0
 
-# Function to fetch 10-day forecast for selected district
-@st.cache_data(ttl=1800)  # Cache for 30 minutes
-def get_10day_forecast(district):
+# Weather fetch function (with English mapping)
+@st.cache_data(ttl=1800)
+def get_10day_forecast(hindi_district):
+    english_district = district_english_map.get(hindi_district, hindi_district)  # Map to English
     days = 10
-    url = f"http://api.weatherapi.com/v1/forecast.json?key={WEATHER_API_KEY}&q={district},India&days={days}"
+    url = f"http://api.weatherapi.com/v1/forecast.json?key={WEATHER_API_KEY}&q={english_district},India&days={days}"
+    if WEATHER_API_KEY == "YOUR_WEATHERAPI_KEY_HERE":
+        return None  # Force error if key not set
     try:
         response = requests.get(url)
-        data = response.json()
         if response.status_code == 200:
+            data = response.json()
             forecast_list = []
             for i in range(days):
                 day_data = data["forecast"]["forecastday"][i]
@@ -93,105 +176,26 @@ def get_10day_forecast(district):
                 min_temp = day_data["day"]["mintemp_c"]
                 avg_temp = day_data["day"]["avgtemp_c"]
                 condition = day_data["day"]["condition"]["text"]
-                weather_emoji = "☀️" if "sunny" in condition.lower() else "🌤️" if "cloudy" in condition.lower() else "🌧️" if "rain" in condition.lower() else "⛅"
-                forecast_list.append({
-                    "date": date,
-                    "max_temp": max_temp,
-                    "min_temp": min_temp,
-                    "avg_temp": avg_temp,
-                    "condition": condition,
-                    "emoji": weather_emoji
-                })
+                emoji = "☀️" if "sunny" in condition.lower() else "🌤️" if "cloudy" in condition.lower() else "🌧️" if "rain" in condition.lower() else "⛅"
+                forecast_list.append({"date": date, "max_temp": max_temp, "min_temp": min_temp, "avg_temp": avg_temp, "condition": condition, "emoji": emoji})
             return forecast_list
         else:
+            st.error(f"API त्रुटि: {response.status_code}. कुंजी चेक करें।")
             return None
     except Exception as e:
-        st.error(f"मौसम डेटा लाने में त्रुटि: {e}")
+        st.error(f"मौसम डेटा त्रुटि: {e}. API कुंजी सेट करें।")
         return None
 
-# Function to get pesticide suggestion (Hindi)
+# Pesticide suggestion
 def get_pesticide_suggestion(crop):
     crop_lower = crop.lower().strip()
-    if crop_lower in pesticide_suggestions:
-        return pesticide_suggestions[crop_lower]
-    else:
-        return "इस फसल के लिए कोई विशिष्ट सुझाव उपलब्ध नहीं। स्थानीय विशेषज्ञ से परामर्श लें।"
+    return pesticide_suggestions.get(crop_lower, "विशिष्ट सुझाव उपलब्ध नहीं। विशेषज्ञ से पूछें।")
 
-# Function to display crop prices (National table with real data)
+# Prices display
 def get_crop_prices_display(user_crop):
-    if not crop_prices:
-        return "मूल्य डेटा अभी उपलब्ध नहीं। agmarknet.nic.in पर नवीनतम जांचें।", 0
-    
-    table_lines = ["**भारत के वर्तमान मंडी मूल्य (₹ प्रति क्विंटल) - अपडेट: " + datetime.now().strftime("%Y-%m-%d") + "**",
-                   "| फसल | मोडल मूल्य | न्यून-अधिकतम | अनुमानित आय/एकड़ (₹) |",
-                   "|------|-------------|-------------|-----------------------|"]
-    
-    total_revenue_estimate = 0
     crop_lower = user_crop.lower().strip()
-    for crop, data in crop_prices.items():
-        modal = data["modal_price"]
-        min_max = f"{data['min_price']}-{data['max_price']}"
-        yield_q = data["avg_yield_quintal_per_acre"]
-        revenue = modal * yield_q
-        table_lines.append(f"| {crop.capitalize()} | {modal} | {min_max} | {revenue:,} |")
-        
-        if crop_lower == crop:
-            total_revenue_estimate = revenue
-    
-    table = "\n".join(table_lines)
-    
-    msg = f"{table}\n\n**आपकी फसल ({user_crop}) के लिए आय:** ₹{total_revenue_estimate:,}/एकड़ (औसत उपज {crop_prices.get(crop_lower, {}).get('avg_yield_quintal_per_acre', 0)} क्विंटल/एकड़)।\n\n*नोट: राष्ट्रीय औसत (Agmarknet से)। वास्तविक के लिए [Agmarknet](https://agmarknet.gov.in/SearchCmmMkt.aspx) चेक करें।*"
-    
-    return msg, total_revenue_estimate  # Return revenue for profit calc
-
-# Function to calculate profit (new)
-def calculate_profit(revenue, total_cost, crop):
-    if total_cost > 0:
-        profit = revenue - total_cost
-        profit_emoji = "💰" if profit > 0 else "⚠️" if profit == 0 else "📉"
-        return f"{profit_emoji} **{crop} के लिए लाभ कैलकुलेशन:**\n- अनुमानित आय: ₹{revenue:,}/एकड़\n- कुल लागत (आपकी इनपुट): ₹{total_cost:,}/एकड़\n- **शुद्ध लाभ: ₹{profit:,}/एकड़** (लागत घटाकर)\n\n*टिप: सामान्य लागत - गेहूं: ₹15,000-20,000/एकड़ (बीज, खाद, श्रम); अपनी वास्तविक लागत डालें।*"
-    else:
-        return f"**{crop} के लिए आय:** ₹{revenue:,}/एकड़। लागत डालकर लाभ देखें!\n\n*टिप: कुल लागत (बीज + श्रम + खाद आदि) डालें (₹ में)।*"
-
-# Main App Logic (Button-based steps)
-if st.session_state.step == 0:
-    st.header("🌍 अपना राज्य चुनें")
-    selected_state = st.selectbox("राज्य:", list(states_districts.keys()))
-    if st.button("राज्य चुनें 👆", key="select_state"):
-        st.session_state.selected_state = selected_state
-        st.session_state.step = 1
-        st.rerun()
-
-elif st.session_state.step == 1:
-    st.header(f"📍 {st.session_state.selected_state} में अपना जिला चुनें")
-    districts = states_districts.get(st.session_state.selected_state, [])
-    selected_district = st.selectbox("जिला:", districts)
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("जिला चुनें 👆", key="select_district"):
-            st.session_state.selected_district = selected_district
-            st.session_state.step = 2
-            st.rerun()
-    with col2:
-        if st.button("वापस राज्य चुनें ⬅️", key="back_state"):
-            st.session_state.step = 0
-            st.rerun()
-
-elif st.session_state.step == 2:
-    st.header(f"🌤️ {st.session_state.selected_district} के लिए 10-दिन मौसम पूर्वानुमान")
-    forecast_data = get_10day_forecast(st.session_state.selected_district)
-    if forecast_data:
-        st.markdown("**आज से शुरू 10-दिन मौसम पूर्वानुमान:**")
-        for day in forecast_data:
-            st.markdown(f"- **{day['date']}** {day['emoji']}: अधिकतम {day['max_temp']}°C / न्यूनतम {day['min_temp']}°C | औसत {day['avg_temp']:.1f}°C | {day['condition']}")
-        col1, col2, col3, col4, col5 = st.columns(5)
-        with col1:
-            if st.button("गेहूं 🌾", key="crop_wheat"):
-                st.session_state.selected_crop = "wheat"
-                st.session_state.step = 3
-                st.rerun()
-        with col2:
-            if st.button("चावल 🌾", key="crop_rice"):
-                st.session_state.selected_crop = "rice"
-                st.session_state.step = 3
-                st
+    data = crop_prices.get(crop_lower, {})
+    modal = data.get("modal_price", 0)
+    yield_q = data.get("avg_yield_quintal_per_acre", 0)
+    revenue = modal * yield_q
+    table = f"**मंडी मूल्य (₹/क्विंटल, Oct 2024):** | फसल | मोडल | रेंज | आय/एकड़ |\n|------|------|------|----------|\n
