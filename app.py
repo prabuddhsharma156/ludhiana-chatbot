@@ -177,4 +177,44 @@ elif st.session_state.step == 2:
             st.markdown(f"- **{day['date']}** {day['emoji']}: अधिकतम {day['max_temp']}°C / न्यूनतम {day['min_temp']}°C | औसत {day['avg_temp']:.1f}°C | {day['condition']}")
         col1, col2, col3, col4, col5 = st.columns(5)
         with col1:
-            if st.button("गेहूं 🌾", key="crop_wheat
+            if st.button("गेहूं 🌾", key="crop_wheat"):
+                st.session_state.selected_crop = "wheat"
+                st.session_state.step = 3
+                st.rerun()
+        with col2:
+            if st.button("चावल 🌾", key="crop_rice"):
+                st.session_state.selected_crop = "rice"
+                st.session_state.step = 3
+                st.rerun()
+        with col3:
+            if st.button("मक्का 🌽", key="crop_maize"):
+                st.session_state.selected_crop = "maize"
+                st.session_state.step = 3
+                st.rerun()
+        with col4:
+            if st.button("कपास 🧵", key="crop_cotton"):
+                st.session_state.selected_crop = "cotton"
+                st.session_state.step = 3
+                st.rerun()
+        with col5:
+            if st.button("गन्ना 🪴", key="crop_sugarcane"):
+                st.session_state.selected_crop = "sugarcane"
+                st.session_state.step = 3
+                st.rerun()
+    else:
+        st.error("मौसम डेटा लाने में त्रुटि। पुनः प्रयास करें।")
+        if st.button("वापस जिला चुनें ⬅️", key="back_district"):
+            st.session_state.step = 1
+            st.rerun()
+
+elif st.session_state.step == 3:
+    st.header(f"🌾 {st.session_state.selected_crop} के लिए कीटनाशक सुझाव (मौसम को ध्यान में रखते हुए)")
+    pesticide = get_pesticide_suggestion(st.session_state.selected_crop)
+    st.markdown(f"**सुझाया कीटनाशक:**\n{pesticide}")
+    st.markdown("*नोट: मौसम के आधार पर हल्के दिनों में उपयोग करें। स्थानीय सलाह लें।*")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("मूल्य अपडेट देखें 💰", key="show_prices"):
+            st.session_state.step = 4
+            st.rerun()
+    with col
