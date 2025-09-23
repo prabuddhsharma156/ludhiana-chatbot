@@ -3,7 +3,7 @@ import requests
 from datetime import datetime
 
 # Load API key from Streamlit Secrets (MUST SET REAL KEY for weather to work)
-WEATHER_API_KEY = st.secrets.get("WEATHER_API_KEY", "a471efb91f4c4e29ac9135831252209")
+WEATHER_API_KEY = st.secrets.get("WEATHER_API_KEY", "YOUR_WEATHERAPI_KEY_HERE")
 
 # Crop to pesticide mapping (Hindi descriptions)
 pesticide_suggestions = {
@@ -67,39 +67,13 @@ district_english_map = {
     "भुवनेश्वर": "Bhubaneswar", "कटक": "Cuttack", "बरम्पुर": "Berhampur", "राउरकेला": "Rourkela", "बालासोर": "Balasore",
     "इटानगर": "Itanagar", "गुवाहाटी": "Guwahati", "रायपुर": "Raipur", "पणजी": "Panaji", "तिरुवनंतपुरम": "Thiruvananthapuram",
     "इम्फाल पूर्व": "Imphal", "शिलांग": "Shillong", "आइजोल": "Aizawl", "कोहिमा": "Kohima", "गंगटोक": "Gangtok", "अगरतला": "Agartala",
-}
-
-# Real crop prices (Oct 2024 national averages - static for stability)
-crop_prices = {
-    "wheat": {"modal_price": 2450, "min_price": 2400, "max_price": 2500, "avg_yield_quintal_per_acre": 20},
-    "rice": {"modal_price": 2150, "min_price": 2100, "max_price": 2200, "avg_yield_quintal_per_acre": 25},
-    "maize": {"modal_price": 1850, "min_price": 1800, "max_price": 1900, "avg_yield_quintal_per_acre": 18},
-    "cotton": {"modal_price": 6700, "min_price": 6600, "max_price": 6800, "avg_yield_quintal_per_acre": 10},
-    "sugarcane": {"modal_price": 360, "min_price": 350, "max_price": 370, "avg_yield_quintal_per_acre": 400},
-}
-
-# Streamlit config
-st.set_page_config(page_title="फसल सलाह चैटबॉट", page_icon="🌤️", layout="centered")
-st.title("🌤️ भारतीय किसानों के लिए मौसम, सलाह और लाभ कैलकुलेटर")
-st.markdown("---")
-
-# Session state initialization
-if "step" not in st.session_state:
-    st.session_state.step = 0  # 0: State, 1: District, 2: Weather & Crop Select, 3: Pesticide, 4: Prices, 5: Profit
-if "selected_state" not in st.session_state:
-    st.session_state.selected_state = ""
-if "selected_district" not in st.session_state:
-    st.session_state.selected_district = ""
-if "selected_crop" not in st.session_state:
-    st.session_state.selected_crop = ""
-if "total_cost" not in st.session_state:
-    st.session_state.total_cost = 0
-if "revenue_estimate" not in st.session_state:
-    st.session_state.revenue_estimate = 0
-
-# Weather fetch function (with English mapping)
-@st.cache_data(ttl=1800)
-def get_10day_forecast(hindi_district):
-    english_district = district_english_map.get(hindi_district, hindi_district)
-    days = 10
-    url = f"http://api.weatherapi.com/v1
+    "मार्गाव": "Margao", "दुर्ग": "Durg", "बिलासपुर": "Bilaspur", "रायगढ़": "Raigad", "जांजगीर-चांपा": "Janjgir-Champa",
+    "ईस्ट खासी हिल्स": "East Khasi Hills", "वेस्ट गारो हिल्स": "West Garo Hills", "ईस्ट गारो हिल्स": "East Garo Hills", "लुंगलेई": "Lunglei",
+    "चम्फाई": "Champhai", "कौलक": "Kolasib", "मोकोकचुंग": "Mokokchung", "तुकेसांग": "Tuensang", "साउस गोवा": "South Goa",
+    "नॉर्थ गोवा": "North Goa", "कामरूप": "Kamrup", "सिलचर": "Silchar", "जोरहाट": "Jorhat", "डिब्रूगढ़": "Dibrugarh",
+    "पापुम पारे": "Papum Pare", "लोहित": "Lohit", "विजयवाड़ा": "Vijayawada", "गुंटूर": "Guntur", "कुरनूल": "Kurnool",
+    "अनंतपुर": "Anantapur", "त्रिशूर": "Thrissur", "कोझिकोड": "Kozhikode", "कोच्चि": "Kochi", "कोट्टायम": "Kottayam",
+    "नासिक": "Nashik", "अमरावती": "Amravati", "नागपुर": "Nagpur", "पुणे": "Pune", "मुंबई": "Mumbai",
+    "उज्जैन": "Ujjain", "जबलपुर": "Jabalpur", "ग्वालियर": "Gwalior", "इंदौर": "Indore", "भोपाल": "Bhopal",
+    "बठिंडा": "Bathinda", "पटियाला": "Patiala", "जालंधर": "Jalandhar", "अमृतसर": "Amritsar", "लुधियाना": "Ludhiana",
+    "बालासोर": "Balasore", "राउरकेला": "Rourkela", "बरम्पुर": "Berhampur", "
