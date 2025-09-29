@@ -41,12 +41,14 @@ crop_prices = {
 
 # App config
 st.set_page_config(page_title="फसल सलाह चैटबॉट", page_icon="🌤️", layout="centered")
-st.title("🌤️ किसानों के लिए मौसम, दवा, मूल्य और लाभ कैलकुलेटर")
+st.title("🌤️ किसानों के लिए सलाह सेवाएं")
 st.markdown("---")
 
 # Session state init
 if "step" not in st.session_state:
     st.session_state.step = 0
+if "selected_service" not in st.session_state:
+    st.session_state.selected_service = ""
 if "selected_state" not in st.session_state:
     st.session_state.selected_state = ""
 if "selected_district" not in st.session_state:
@@ -120,15 +122,102 @@ def calculate_profit(revenue, cost, crop):
         return f"{emoji} **{crop} लाभ:**\n- आय: ₹{revenue:,}\n- लागत: ₹{cost:,}\n- **लाभ: ₹{profit:,}/एकड़**\n*टिप: लागत में बीज, खाद, मजदूरी शामिल करें।*"
     return f"**{crop} आय:** ₹{revenue:,}/एकड़। लागत डालें।"
 
-# Main steps
+# Main steps with new service-based flow
 if st.session_state.step == 0:
-    st.header("🌍 राज्य चुनें")
+    st.header("कृपया सेवा चुनें")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("मौसम पूर्वानुमान 🌤️"):
+            st.session_state.selected_service = "weather"
+            st.session_state.step = 1  # Go to state for weather
+            st.rerun()
+        if st.button("कीटनाशक सलाह 🛡️"):
+            st.session_state.selected_service = "pesticide"
+            st.session_state.step = 1  # Go to state for pesticide
+            st.rerun()
+    with col2:
+        if st.button("मंडी मूल्य 💰"):
+            st.session_state.selected_service = "price"
+            st.session_state.step = 3  # Direct to crop for price
+            st.rerun()
+        if st.button("लाभ कैलकुलेटर 💹"):
+            st.session_state.selected_service = "profit"
+            st.session_state.step = 3  # Direct to crop for profit
+            st.rerun()
+    if st.button("रीसेट 🔄"):
+        for k in list(st.session_state.keys()):
+            del st.session_state[k]
+        st.session_state.step = 0
+        st.rerun()
+
+elif st.session_state.step == 1:
+    st.header("🌍 राज्य चुनें (स्थान-आधारित सेवा के लिए)")
     state = st.selectbox("राज्य:", list(states_districts.keys()))
     col1, col2 = st.columns(2)
     with col1:
         if st.button("चुनें 👆"):
             st.session_state.selected_state = state
+            st.session_state.step = 2
+            st.rerun()
+    with col2:
+        if st.button("वापस सेवाएं ⬅️"):
+            st.session_state.step = 0
+            st.rerun()
+
+elif st.session_state.step == 2:
+    st.header(f"📍 {st.session_state.selected_state} में जिला चुनें")
+    district = st.selectbox("जिला:", states_districts[st.session_state.selected_state])
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("चुनें 👆"):
+            st.session_state.selected_district = district
+            if st.session_state.selected_service == "weather":
+                st.session_state.step = 4  # To weather display
+            elif st.session_state.selected_service == "pesticide":
+                st.session_state.step = 3  # To crop for pesticide
+            st.rerun()
+    with col2:
+        if st.button("वापस राज्य ⬅️"):
             st.session_state.step = 1
+            st.rerun()
+
+elif st.session_state.step == 3:
+    st.header("🌾 फसल चुनें")
+    cols = st.columns(5)
+    crops = ["wheat", "rice", "maize", "cotton", "sugarcane"]
+    crop_names = ["गेहूं 🌾", "चावल 🌾", "मक्का 🌽", "कपास 🧵", "गन्ना 🪴"]
+    for i, (crop, name) in enumerate(zip(crops, crop_names)):
+        with cols[i]:
+            if st.button(name, key=f"crop_{crop}"):
+                st.session_state.selected_crop = crop
+                if st.session_state.selected_service == "pesticide":
+                    st.session_state.step = 5  # To pesticide
+                elif st.session_state.selected_service == "price":
+                    st.session_state.step = 6  # To prices
+                elif st.session_state.selected_service == "profit":
+                    st.session_state.step = 7  # To profit
+                st.rerun()
+    # Back logic based on service
+    if st.button("वापस ⬅️"):
+        if st.session_state.selected_service in ["weather", "pesticide"]:
+            st.session_state.step = 2
+        else:
+            st.session_state.step = 0
+        st.rerun()
+
+elif st.session_state.step == 4:  # Weather display
+    st.header(f"🌤️ {st.session_state.selected_district} का 10-दिन मौसम पूर्वानुमान")
+    forecast = get_10day_forecast(st.session_state.selected_district)
+    if forecast:
+        for day in forecast:
+            st.markdown(f"- **{day['date']}** {day['emoji']}: {day['max_temp']}°C / {day['min_temp']}°C | {day['condition']}")
+        st.success("मौसम पूर्वानुमान लोड हो गया!")
+    else:
+        st.error("मौसम डेटा उपलब्ध नहीं। API कुंजी सेट करें।")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("वापस जिला ⬅️"):
+            st.session_state.step = 2
             st.rerun()
     with col2:
         if st.button("रीसेट 🔄"):
@@ -137,91 +226,38 @@ if st.session_state.step == 0:
             st.session_state.step = 0
             st.rerun()
 
-elif st.session_state.step == 1:
-    st.header(f"📍 {st.session_state.selected_state} जिला")
-    district = st.selectbox("जिला:", states_districts[st.session_state.selected_state])
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("चुनें 👆"):
-            st.session_state.selected_district = district
-            st.session_state.step = 2
-            st.rerun()
-    with col2:
-        if st.button("वापस ⬅️"):
-            st.session_state.step = 0
-            st.rerun()
-
-elif st.session_state.step == 2:
-    st.header(f"🌤️ {st.session_state.selected_district} मौसम (10 दिन)")
-    forecast = get_10day_forecast(st.session_state.selected_district)
-    if forecast:
-        for day in forecast:
-            st.markdown(f"- **{day['date']}** {day['emoji']}: {day['max_temp']}°C / {day['min_temp']}°C | {day['condition']}")
-        st.success("मौसम लोड! फसल चुनें।")
-    else:
-        st.error("मौसम लोड नहीं। जारी रखें।")
-        if st.button("जारी ➡️"):
-            st.session_state.step = 3
-            st.rerun()
-    # Crop buttons
-    cols = st.columns(5)
-    crops = ["wheat", "rice", "maize", "cotton", "sugarcane"]
-    crop_names = ["गेहूं 🌾", "चावल 🌾", "मक्का 🌽", "कपास 🧵", "गन्ना 🪴"]
-    for i, (crop, name) in enumerate(zip(crops, crop_names)):
-        with cols[i]:
-            if st.button(name, key=f"crop_{crop}"):
-                st.session_state.selected_crop = crop
-                st.session_state.step = 3
-                st.rerun()
-    if st.button("वापस ⬅️"):
-        st.session_state.step = 1
-        st.rerun()
-
-elif st.session_state.step == 3:
-    st.header(f"🛡️ {st.session_state.selected_crop} दवा सलाह")
+elif st.session_state.step == 5:  # Pesticide display
+    st.header(f"🛡️ {st.session_state.selected_crop} के लिए कीटनाशक सलाह")
     st.markdown(get_pesticide_suggestion(st.session_state.selected_crop))
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("मूल्य 💰"):
-            msg, rev = get_crop_prices_display(st.session_state.selected_crop)
-            st.markdown(msg)
-            st.session_state.revenue_estimate = rev
-            st.session_state.step = 4
-            st.rerun()
-    with col2:
-        if st.button("वापस ⬅️"):
-            st.session_state.step = 2
-            st.rerun()
-
-elif st.session_state.step == 4:
-    st.header(f"💰 {st.session_state.selected_crop} मूल्य")
-    msg, rev = get_crop_prices_display(st.session_state.selected_crop)
-    st.markdown(msg)
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("लाभ कैलकुलेटर 💹"):
-            st.session_state.step = 5
-            st.rerun()
-    with col2:
-        if st.button("वापस ⬅️"):
+        if st.button("वापस फसल ⬅️"):
             st.session_state.step = 3
             st.rerun()
+    with col2:
+        if st.button("रीसेट 🔄"):
+            for k in list(st.session_state.keys()):
+                del st.session_state[k]
+            st.session_state.step = 0
+            st.rerun()
 
-elif st.session_state.step == 5:
-    st.header(f"💹 {st.session_state.selected_crop} लाभ कैलकुलेटर")
-    cost = st.number_input("कुल लागत (₹/एकड़):", min_value=0.0, value=0.0, step=1000.0)
-    st.session_state.total_cost = cost
+elif st.session_state.step == 6:  # Prices display
+    st.header(f"💰 {st.session_state.selected_crop} के लिए मंडी मूल्य")
+    msg, rev = get_crop_prices_display(st.session_state.selected_crop)
+    st.markdown(msg)
+    st.session_state.revenue_estimate = rev
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("कैलकुलेट करें"):
-            profit_msg = calculate_profit(st.session_state.revenue_estimate, cost, st.session_state.selected_crop)
-            st.markdown(profit_msg)
-    with col2:
-        if st.button("वापस ⬅️"):
-            st.session_state.step = 4
+        if st.button("वापस फसल ⬅️"):
+            st.session_state.step = 3
             st.rerun()
-    if st.button("रीसेट 🔄"):
-        for k in list(st.session_state.keys()):
-            del st.session_state[k]
-        st.session_state.step = 0
-        st.rerun()
+    with col2:
+        if st.button("रीसेट 🔄"):
+            for k in list(st.session_state.keys()):
+                del st.session_state[k]
+            st.session_state.step = 0
+            st.rerun()
+
+elif st.session_state.step == 7:  # Profit calculator
+    st.header(f"💹 {st.session_state.selected_crop} लाभ कैलकुलेटर")
+    cost = st.number_input("कुल लागत (₹/एकड़):", min_value=0.0
