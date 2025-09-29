@@ -260,4 +260,4 @@ elif st.session_state.step == 6:  # Prices display
 
 elif st.session_state.step == 7:  # Profit calculator
     st.header(f"💹 {st.session_state.selected_crop} लाभ कैलकुलेटर")
-    cost = st.number_input("कुल लागत (₹/एकड़):", min_value=0.0
+    cost = st.number_input("कुल लागत (₹/एकड़):",
