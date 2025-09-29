@@ -244,20 +244,4 @@ elif st.session_state.step == 5:  # Pesticide display
 elif st.session_state.step == 6:  # Prices display
     st.header(f"💰 {st.session_state.selected_crop} के लिए मंडी मूल्य")
     msg, rev = get_crop_prices_display(st.session_state.selected_crop)
-    st.markdown(msg)
-    st.session_state.revenue_estimate = rev
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("वापस फसल ⬅️"):
-            st.session_state.step = 3
-            st.rerun()
-    with col2:
-        if st.button("रीसेट 🔄"):
-            for k in list(st.session_state.keys()):
-                del st.session_state[k]
-            st.session_state.step = 0
-            st.rerun()
-
-elif st.session_state.step == 7:  # Profit calculator
-    st.header(f"💹 {st.session_state.selected_crop} लाभ कैलकुलेटर")
-    cost = st.number_input("कुल लागत (₹/एकड़):",
+    st.markdown(msg
