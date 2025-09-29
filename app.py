@@ -194,15 +194,4 @@ elif st.session_state.step == 3:
                     st.session_state.step = 5  # To pesticide
                 elif st.session_state.selected_service == "price":
                     st.session_state.step = 6  # To prices
-                elif st.session_state.selected_service == "profit":
-                    st.session_state.step = 7  # To profit
-                st.rerun()
-    # Back logic based on service
-    if st.button("वापस ⬅️"):
-        if st.session_state.selected_service in ["weather", "pesticide"]:
-            st.session_state.step = 2
-        else:
-            st.session_state.step = 0
-        st.rerun()
-
-elif st.session_state.step == 4: 
+                elif st.session_state.selected_service
