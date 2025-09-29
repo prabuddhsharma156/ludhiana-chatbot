@@ -213,4 +213,27 @@ elif st.session_state.step == 4:  # Weather display
             st.markdown(f"- **{day['date']}** {day['emoji']}: {day['max_temp']}°C / {day['min_temp']}°C | {day['condition']}")
         st.success("मौसम पूर्वानुमान लोड हो गया!")
     else:
-        st.error("मौसम डेटा उपलब्ध नहीं। API कुंजी सेट
+        st.error("मौसम डेटा उपलब्ध नहीं। API कुंजी सेट करें।")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("वापस जिला ⬅️"):
+            st.session_state.step = 2
+            st.rerun()
+    with col2:
+        if st.button("रीसेट 🔄"):
+            for k in list(st.session_state.keys()):
+                del st.session_state[k]
+            st.session_state.step = 0
+            st.rerun()
+
+elif st.session_state.step == 5:  # Pesticide display
+    st.header(f"🛡️ {st.session_state.selected_crop} के लिए कीटनाशक सलाह")
+    st.markdown(get_pesticide_suggestion(st.session_state.selected_crop))
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("वापस फसल ⬅️"):
+            st.session_state.step = 3
+            st.rerun()
+    with col2:
+        if st.button("रीसेट 🔄"):
+           
