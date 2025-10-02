@@ -6,66 +6,62 @@ from datetime import datetime
 st.set_page_config(page_title="किसान सलाह", page_icon="🌱", layout="wide")
 
 # --- API Key Management ---
-WEATHER_API_KEY = st.secrets.get("WEATHER_API_KEY")
+WEATHER_API_KEY = st.secrets.get("a471efb91f4c4e29ac9135831252209")
 
 # --- Custom Styling (CSS) ---
 def add_custom_css():
-    # The user's chosen background image URL
     background_image_url = "https://thumbs.dreamstime.com/b/asian-farmer-working-field-morning-time-farmer-examining-his-young-corn-plant-cultivated-agricultural-field-business-270414528.jpg"
 
     st.markdown(f"""
     <style>
-    /* --- Main App Background (now uses the same image) --- */
+    /* --- Main App Background --- */
     .stApp {{
         background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url("{background_image_url}");
         background-size: cover;
         background-attachment: fixed;
     }}
 
-    /* Translucent Containers for Readability */
+    /* --- IMPROVED READABILITY: Increased opacity for content cards --- */
     [data-testid="stSidebar"], [data-testid="stSidebar"] > div:first-child {{
-        background: rgba(248, 249, 251, 0.9);
+        background: rgba(248, 249, 251, 0.95); /* Was 0.9 */
         backdrop-filter: blur(5px);
         box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         border-right: 1px solid rgba(0,0,0,0.1);
     }}
     .main .block-container {{
-        background: rgba(255, 255, 255, 0.9);
+        background: rgba(255, 255, 255, 0.95); /* Was 0.9 */
         backdrop-filter: blur(5px);
         border-radius: 15px;
         padding: 2rem;
         box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     }}
 
-    /* --- Landing Page Specific Styles --- */
-    .landing-page-container {{
+    /* --- Landing Page: Full-screen background layer --- */
+    .landing-background {{
         background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url("{background_image_url}");
         background-size: cover;
         background-position: center;
         position: fixed;
         top: 0; left: 0;
         width: 100%; height: 100%;
-        display: flex; flex-direction: column;
-        justify-content: center; align-items: center;
+    }}
+    
+    /* --- PERFECTLY CENTERED: Container for landing page content --- */
+    .centered-content {{
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
         text-align: center;
         color: white;
     }}
-    .landing-page-container h1 {{
+    .landing-title {{
         font-size: 4.5rem;
         font-weight: 900;
         text-shadow: 3px 3px 10px rgba(0,0,0,0.8);
-        margin-bottom: 1rem; /* Space between title and button */
+        margin-bottom: 2rem; /* Space between title and button */
     }}
-    
-    /* --- CSS for Centering the Button --- */
-    .button-container {{
-        position: absolute;
-        top: 65%; /* Position it below the title */
-        left: 50%;
-        transform: translateX(-50%);
-    }}
-
-    .button-container .stButton button {{
+    .centered-content .stButton button {{
         background-color: #28a745;
         color: white;
         font-size: 1.5rem;
@@ -76,7 +72,7 @@ def add_custom_css():
         box-shadow: 0 4px 15px rgba(0,0,0,0.4);
         transition: transform 0.2s, box-shadow 0.2s;
     }}
-    .button-container .stButton button:hover {{
+    .centered-content .stButton button:hover {{
         transform: scale(1.05);
         box-shadow: 0 6px 20px rgba(0,0,0,0.5);
     }}
@@ -177,15 +173,18 @@ def render_profit_page():
         col1.metric("अनुमानित आय", f"₹{revenue:,}", "प्रति एकड़"); col2.metric("आपकी लागत", f"₹{cost:,}", "प्रति एकड़")
         col3.metric("शुद्ध लाभ/नुकसान", f"₹{profit:,}", "लाभ" if profit >= 0 else "नुकसान")
 
-# --- Main App Logic (with button centering) ---
+# --- Main App Logic (with new landing page structure) ---
 add_custom_css()
 if "page" not in st.session_state: st.session_state.page = "landing"
 
 if st.session_state.page == "landing":
-    st.markdown('<div class="landing-page-container"><h1>किसान सलाह</h1></div>', unsafe_allow_html=True)
-    # This container will hold the button and center it
+    # This div is just for the full-screen background image
+    st.markdown('<div class="landing-background"></div>', unsafe_allow_html=True)
+    
+    # This container holds the centered title and button
     with st.container():
-        st.markdown('<div class="button-container">', unsafe_allow_html=True)
+        st.markdown('<div class="centered-content">', unsafe_allow_html=True)
+        st.markdown('<h1 class="landing-title">किसान सलाह</h1>', unsafe_allow_html=True)
         if st.button("ऐप में प्रवेश करें", key="enter_app"):
             st.session_state.page = "main_app"
             st.rerun()
