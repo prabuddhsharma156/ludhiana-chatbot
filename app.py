@@ -38,7 +38,7 @@ def add_custom_css():
 
     /* --- Landing Page Specific Styles --- */
     .landing-page-container {{
-        background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url("https://images.pexels.com/photos/1595171/pexels-photo-1595171.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2");
+        background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url("https://images.pexels.com/photos/3889855/pexels-photo-3889855.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"); /* NEW FARMER IMAGE */
         background-size: cover;
         background-position: center;
         position: fixed;
@@ -204,3 +204,4 @@ else:
     render_sidebar()
     service_pages = {"home": render_home_page, "weather": render_weather_page, "pesticide": render_pesticide_page, "price": render_price_page, "profit": render_profit_page}
     service_pages.get(st.session_state.get("selected_service", "home"), render_home_page)()
+
