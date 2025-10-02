@@ -11,6 +11,7 @@ st.set_page_config(page_title="किसान सलाह", page_icon="🌱", 
 WEATHER_API_KEY = st.secrets.get("a471efb91f4c4e29ac9135831252209")
 
 # --- Custom Styling (CSS) ---
+# --- Custom Styling (CSS) ---
 def add_custom_css():
     st.markdown(f"""
     <style>
@@ -38,7 +39,8 @@ def add_custom_css():
 
     /* --- Landing Page Specific Styles --- */
     .landing-page-container {{
-        background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url("https://images.pexels.com/photos/3889855/pexels-photo-3889855.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"); /* NEW FARMER IMAGE */
+        /* YOUR NEW IMAGE IS HERE */
+        background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url("https://thumbs.dreamstime.com/b/asian-farmer-working-field-morning-time-farmer-examining-his-young-corn-plant-cultivated-agricultural-field-business-270414528.jpg");
         background-size: cover;
         background-position: center;
         position: fixed;
@@ -71,7 +73,6 @@ def add_custom_css():
     }}
     </style>
     """, unsafe_allow_html=True)
-
 # --- Data Dictionaries ---
 pesticide_suggestions = {
     "wheat": "फंगीसाइड XYZ (उदाहरण: कार्बेंडाजिम) - जंग और स्मट से सुरक्षा। 2-3 ग्राम/लीटर पानी में मिलाकर छिड़काव करें। लागत: ₹200-300/एकड़।",
@@ -204,4 +205,5 @@ else:
     render_sidebar()
     service_pages = {"home": render_home_page, "weather": render_weather_page, "pesticide": render_pesticide_page, "price": render_price_page, "profit": render_profit_page}
     service_pages.get(st.session_state.get("selected_service", "home"), render_home_page)()
+
 
